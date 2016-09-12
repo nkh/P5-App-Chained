@@ -173,6 +173,7 @@ The Wrapper will handle the following options
 			
 	  my ($self, $command, $arguments) =  @_ ;
 	  system 'ra_check.pl ' . join(' ', @{$arguments}) ;
+	  # remember to check and return the return value of the 'system' command
 	  },
 			
 	help => sub {system "ra_check.pl --help"}, # a sub to be run when help required
@@ -252,6 +253,7 @@ if it is not defined, The apropos fields in the sub commands entries are searche
 			{
 			my ($self, $command, $arguments) =  @_ ;
 			system 'ra_check.pl ' . join(' ', @{$arguments}) ;
+	  		# remember to check and return the return value of the 'system' command
 			},
 			
 		help => sub {system "ra_check.pl --help"},
@@ -871,6 +873,8 @@ return unless defined $self->{parsed_command} ;
 
 my $sub_app = $self->{sub_apps}{$self->{parsed_command}} ;
 
+my $return_code = 0 ;
+
 if(defined $sub_app->{run})
 	{
 	if('CODE' eq ref($sub_app->{run}))
@@ -878,19 +882,21 @@ if(defined $sub_app->{run})
 		my @arguments ;
 		@arguments = map {"'$_'"} @{$self->{command_options}} if(defined $self->{command_options}) ;
 		
-		$sub_app->{run}($self, $sub_app, \@arguments) ;
+		$return_code = $sub_app->{run}($self, $sub_app, \@arguments) ;
 		}
 	else
 		{
 		$self->{INTERACTION}{DIE}->("Error: sub app '$self->{parsed_command}' run subroutine is not a code reference.") ;
+		$return_code = 1 ;
 		}
 	}
 else
 	{
 	$self->{INTERACTION}{DIE}->("Error: sub app '$self->{parsed_command}' run subroutine is not defined.") ;
+	$return_code = 1 ;
 	}
 
-return ;
+return $return_code ;
 }
 
 #-------------------------------------------------------------------------------
